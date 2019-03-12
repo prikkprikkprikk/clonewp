@@ -1,0 +1,21 @@
+## CloneWP script
+
+# Production and development site urls (no trailing slash)
+url:
+  prod: https://www.example.com
+  dev: http://example.test
+
+# Exportfile – relative to produrl
+exportfile: .db/db.sql
+
+# Prod settings
+prod:
+  ip: 146.66.87.165
+  port: 18765
+  user: username
+  # The prod site's root directory (no trailing slash)
+  root: /home/username/www/example.com
+
+plugins:
+  ## space separated list of plugins to deactivate
+  deactivate: worker
