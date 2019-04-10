@@ -10,7 +10,7 @@ exportfile: .db/db.sql
 
 # Prod settings
 prod:
-  ip: 146.66.87.165
+  ip: 192.0.2.0
   port: 18765
   user: username
   # The prod site's root directory (no trailing slash)
