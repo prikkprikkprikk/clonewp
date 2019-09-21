@@ -5,9 +5,6 @@ url:
   prod: https://www.example.com
   dev: http://example.test
 
-# Exportfile – relative to produrl
-exportfile: .db/db.sql
-
 # Prod settings
 prod:
   ip: 192.0.2.0
