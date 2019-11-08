@@ -1,0 +1,84 @@
+#!/bin/bash
+
+function parse_yaml {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+scriptdir="$(dirname "$0")"
+
+pushd $scriptdir
+
+eval $(parse_yaml clonewp.yml)
+
+echo "Cloning from $url_prod to $url_dev"
+
+cd ..
+rootdir=`pwd`
+
+echo "
+Exporting prod database …"
+ssh -T -p $prod_port $prod_user@$prod_ip << EOF
+  cd $prod_root
+  wp db export wp-content/uploads/clonewp_db.sql
+EOF
+
+echo "
+Fetching wp-content …"
+cd "$rootdir/wp-content"
+# rsync -auh --rsh="ssh -p $prod_port" $prod_user@$prod_ip:$prod_root/wp-content/ .
+echo "Done."
+
+echo "
+Deleting prod database export file …"
+ssh -T -p $prod_port $prod_user@$prod_ip << EOF
+  cd $prod_root
+  rm wp-content/uploads/clonewp_db.sql
+EOF
+
+echo "
+Replacing table prefix in wp-config.php …"
+
+remote_prefix=$(ssh -T -p $prod_port $prod_user@$prod_ip "cd $prod_root;grep table_prefix wp-config.php")
+
+re_remote_prefix="('|\")([^'\"]+)('|\")"
+re_local_line="table_prefix[[:space:]]*=[[:space:]]*['\"][^'\"]+['\"];"
+
+if [[ $remote_prefix =~ $re_remote_prefix ]]
+then
+    prefix=${BASH_REMATCH[2]}
+    new_table_prefix_line="table_prefix = \'$prefix\';"
+    cd $rootdir
+    sed -E -i "s/$re_local_line/$new_table_prefix_line/g" wp-config.php
+fi
+
+echo "
+Importing database …"
+wp db import $rootdir/wp-content/uploads/clonewp_db.sql
+
+echo "
+Replacing $url_prod with $url_dev in database …"
+# wp search-replace $url_prod $url_dev
+
+echo "
+Flushing cache …"
+wp cache flush
+
+cd $rootdir
+echo "
+Deactivating plugins …"
+wp plugin deactivate $plugins_deactivate
+
+popd "$@" > /dev/null
