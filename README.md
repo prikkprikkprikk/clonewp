@@ -35,3 +35,13 @@ Have a sip of your favorite beverage while the script …
 Subsequent runs of the script will take much shorter time than the first one, due to rsync's syncing capabilities.
 
 This script is open source and published with the GNU GPL license. Feel free to contribute!
+
+## Troubleshooting
+
+If you run into problems where the script can't connect via SSH, make sure your Vagrantfile has ```config.ssh.insert_key```set to ```true```. This setting was apparently changed due to several (Windows) people having issues.
+
+    # SSH Key Insertion
+    #
+    # This is disabled, we had several contributors who ran into issues.
+    # See: https://github.com/Varying-Vagrant-Vagrants/VVV/issues/1551
+    config.ssh.insert_key = true
