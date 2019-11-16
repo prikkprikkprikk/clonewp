@@ -38,7 +38,7 @@ This script is open source and published with the GNU GPL license. Feel free to 
 
 ## Troubleshooting
 
-If you run into problems where the script can't connect via SSH, make sure your Vagrantfile has ```config.ssh.insert_key```set to ```true```. This setting was apparently changed due to several (Windows) people having issues.
+If you're using VVV and run into problems where the script can't connect via SSH, make sure your Vagrantfile has ```config.ssh.insert_key```set to ```true```. This setting was apparently changed due to several (Windows) people having issues.
 
     # SSH Key Insertion
     #
